@@ -124,6 +124,7 @@ GRAPH_TIMEOUT_SEC=60
 
 - **여행 스타일 분석**: 사용자의 여행 선호도를 분석하여 맞춤형 추천 제공
 - **여행지 추천**: AI 기반 여행지 및 숙소 추천
+- **이미지 기반 여행지 추천(이미지 검색)**: 사진 업로드로 유사 여행지/장소 추천 (프론트 `/image-search` → FastAPI `POST /api/v1/recommend/analyze`)
 - **OAuth 인증**: Google OAuth를 통한 소셜 로그인
 - **실시간 채팅**: WebSocket을 통한 실시간 상담 기능
 
