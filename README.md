@@ -1,6 +1,6 @@
 # Travel Planner 프로젝트
 
-여행 계획 및 추천을 위한 풀스택 애플리케이션입니다.
+여행 계획 및 추천을 위한 풀스택 애플리케이션입니다. (React + Spring Boot + FastAPI)
 
 ## 📁 프로젝트 구조
 
@@ -10,6 +10,33 @@ travel/
 ├── travel-backend-springboot/ # Spring Boot 백엔드 (Java)
 └── travel-frontend/          # React 프론트엔드 (JavaScript)
 ```
+
+## 🧭 실행 순서(로컬)
+
+아래 순서대로 실행하면 화면/기능 확인이 가장 쉽습니다.
+
+1) **FastAPI 실행** (추천/이미지 추천)
+- 실행: `backend-fastapi` → `uvicorn main:app --reload`
+- 문서: `http://127.0.0.1:8000/docs`
+
+2) **Spring Boot 실행** (인증/채팅 등)
+- 실행: `travel-backend-springboot` → `./gradlew bootRun` (Windows: `gradlew.bat bootRun`)
+- 문서: `http://localhost:8080/swagger-ui.html`
+
+3) **Frontend 실행**
+- 실행: `travel-frontend` → `npm install` → `npm run dev`
+- 접속: Vite 기본값 기준 `http://localhost:5173`
+
+## 🖼️ 주요 화면(스크린샷)
+
+포트폴리오용으로 아래 스크린샷을 README에 추가하는 것을 권장합니다.
+
+- 로그인/회원가입
+- 채팅/상담 화면
+- **이미지 기반 여행지 추천 화면** (`/image-search`)
+- 여행 스타일 분석 화면
+
+> 스크린샷을 `docs/screenshots/`에 넣고 README에 이미지 링크로 붙이면 가장 깔끔합니다.
 
 ## 🚀 시작하기
 
@@ -127,6 +154,21 @@ GRAPH_TIMEOUT_SEC=60
 - **이미지 기반 여행지 추천(이미지 검색)**: 사진 업로드로 유사 여행지/장소 추천 (프론트 `/image-search` → FastAPI `POST /api/v1/recommend/analyze`)
 - **OAuth 인증**: Google OAuth를 통한 소셜 로그인
 - **실시간 채팅**: WebSocket을 통한 실시간 상담 기능
+
+## 🧪 이미지 추천 기능 사용 방법(로컬)
+
+- **프론트에서 확인**: 로그인 후 `http://localhost:5173/image-search`
+- **API로 확인(FastAPI)**: `POST http://127.0.0.1:8000/api/v1/recommend/analyze`
+
+PowerShell 예시:
+
+```powershell
+$filePath = "C:\path\to\your-image.jpg"
+Invoke-RestMethod `
+  -Uri "http://127.0.0.1:8000/api/v1/recommend/analyze" `
+  -Method Post `
+  -Form @{ file = Get-Item $filePath; preference = "바다, 감성, 카페" }
+```
 
 ## 🛠 기술 스택
 
