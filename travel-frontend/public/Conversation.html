@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>AI Travel Recommendation Chat</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary": "#1392ec",
+                        "background-light": "#f6f7f8",
+                        "background-dark": "#101a22",
+                        "earth-light": "#f2eee9",
+                        "earth-dark": "#1a1c1e",
+                    },
+                    fontFamily: {
+                        "display": ["Plus Jakarta Sans", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                },
+            },
+        }
+    </script>
+    <style>
+        body {
+            font-family: "Plus Jakarta Sans", sans-serif;
+        }
+
+        .message-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .message-scrollbar::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        #travelStylePopup {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+        }
+
+        #travelStylePopup .popup-inner {
+            position: relative;
+            width: 100%;
+            max-width: 900px;
+            height: 90vh;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            overflow: hidden;
+            border: none;
+            outline: none;
+        }
+
+        #travelStylePopup .popup-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 10;
+            width: 40px;
+            height: 40px;
+            border: none;
+            background: rgba(0, 0, 0, 0.06);
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #0d161b;
+            transition: background 0.2s;
+        }
+
+        #travelStylePopup .popup-close:hover {
+            background: rgba(0, 0, 0, 0.12);
+        }
+
+        #travelStylePopup iframe {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            vertical-align: top;
+            background: #fff;
+            border-radius: 16px;
+        }
+    </style>
+</head>
+
+<body class="bg-background-light dark:bg-background-dark font-display text-[#0d161b] dark:text-slate-100">
+    <div class="flex h-screen w-full overflow-hidden">
+        <!-- Sidebar Navigation -->
+        <aside
+            class="w-72 flex flex-col border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark h-full">
+            <div class="p-6 flex flex-col h-full justify-between">
+                <div class="flex flex-col gap-8">
+                    <!-- Brand Header -->
+                    <div class="flex gap-3 items-center">
+                        <div class="bg-primary rounded-xl p-2 text-white">
+                            <span class="material-symbols-outlined block" style="font-size: 24px;">explore</span>
+                        </div>
+                        <div class="flex flex-col">
+                            <h1 class="text-[#0d161b] dark:text-white text-base font-bold leading-tight">Travel AI</h1>
+                            <p class="text-[#4c799a] text-xs font-medium uppercase tracking-wider">Premium Concierge</p>
+                        </div>
+                    </div>
+                    <!-- Actions -->
+                    <div class="flex flex-col gap-2">
+                        <button id="newRecommendationBtn" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary text-white shadow-lg
+                            shadow-primary/20 hover:bg-primary/90 transition-all">
+                            <span class="material-symbols-outlined">add</span>
+                            <p class="text-sm font-semibold">새 채팅방</p>
+                        </button>
+                        <div class="mt-6 flex flex-col gap-1">
+                            <p class="px-4 text-[10px] font-bold text-[#4c799a] uppercase tracking-widest mb-2">
+                                Recent
+                                Discoveries</p>
+                            <div id="recentDiscoveriesList" class="flex flex-col gap-1">
+                                <p class="px-4 py-2 text-[11px] text-[#4c799a]">불러오는 중...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex flex-col gap-4">
+                    <div class="p-4 bg-earth-light dark:bg-slate-800 rounded-xl">
+                        <p class="text-xs font-bold text-[#0d161b] dark:text-white mb-1">Visual Search Pro</p>
+                        <p class="text-[11px] text-[#4c799a] mb-3 leading-relaxed">Identify any destination from a
+                            single photo.</p>
+                        <button
+                            class="w-full py-2 bg-white dark:bg-slate-700 text-xs font-bold rounded-lg shadow-sm">Upgrade
+                            Plan</button>
+                    </div>
+                    <div class="flex flex-col gap-1 border-t border-slate-100 dark:border-slate-800 pt-4">
+                        <div class="flex items-center gap-3 px-3 py-2 text-[#4c799a] hover:text-[#0d161b] cursor-pointer"
+                            onclick="window.parent.location.href='/mypage'">
+                            <span class="material-symbols-outlined text-[20px]">person</span>
+                            <p class="text-sm font-medium">My Page</p>
+                        </div>
+
+                        <div class="flex items-center gap-3 px-3 py-2 text-[#4c799a] hover:text-[#0d161b] cursor-pointer"
+                            onclick="openTravelStylePopup()">
+                            <span class="material-symbols-outlined text-[20px]">travel_explore</span>
+                            <p class="text-sm font-medium">AI 여행 타입 분석</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- AI 여행 타입 분석 팝업 -->
+        <div id="travelStylePopup" onclick="if(event.target === this) closeTravelStylePopup()">
+            <div class="popup-inner" onclick="event.stopPropagation()">
+                <button type="button" class="popup-close" onclick="closeTravelStylePopup()" title="닫기" aria-label="닫기">
+                    <span class="material-symbols-outlined" style="font-size: 24px;">close</span>
+                </button>
+                <iframe src="/travel_style.html" title="AI 여행 타입 분석"></iframe>
+            </div>
+        </div>
+
+        <!-- Main Chat Area -->
+        <main class="flex-1 flex flex-col relative bg-background-light dark:bg-background-dark">
+            <!-- Header -->
+            <header
+                class="flex items-center justify-between px-8 py-4 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-0 z-10">
+                <div class="flex items-center gap-4">
+                    <div class="flex flex-col">
+                        <h2 id="chatHeaderTitle" class="text-[#0d161b] dark:text-white text-base font-bold">Travel AI
+                            Chat</h2>
+                        <div class="flex items-center gap-2">
+                            <span class="flex h-2 w-2 rounded-full bg-green-500"></span>
+                            <span class="text-[11px] text-[#4c799a] font-medium uppercase tracking-tighter">AI Concierge
+                                Active</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button class="p-2 text-[#4c799a] hover:bg-slate-100 rounded-full transition-colors">
+                        <span class="material-symbols-outlined">share</span>
+                    </button>
+                    <button type="button" id="saveConversationBtn"
+                        class="p-2 text-[#4c799a] hover:bg-slate-100 dark:hover:bg-slate-700 rounded-full transition-colors"
+                        title="대화 저장">
+                        <span class="material-symbols-outlined">star</span>
+                    </button>
+                    <div class="h-8 w-px bg-slate-200 dark:bg-slate-800 mx-2"></div>
+                    <div class="bg-center bg-no-repeat aspect-square bg-cover rounded-full h-10 w-10 border-2 border-white shadow-sm"
+                        data-alt="User profile avatar smiling"
+                        style='background-image: url("https://lh3.googleusercontent.com/aida-public/AB6AXuBG2PtiB80ajCndtTG1I5aK7ajd4M9ndHJdiOFYUtSJM1wRuRbakHBHPP141TYHk39M3_bwT6CU2YgTW68_0F2sOVb2U_2oFZ6JmJnHMh8tv0GZLKswEsCoAiBlEMGo7uZmsk8d42uFVv17R8CBTGOSRmVQ_OcyXffXWmcYzUq5Ktq8XMf9dtSGl-nBZ06cOwf4ago6tZLlQeRE-Ug1vg5cXDFQb6Dl32Uua5yiZ5inkt_A-5D19ifijBZp2u6TwSAv-L7YpUBKujk");'>
+                    </div>
+                </div>
+            </header>
+            <!-- Conversation -->
+            <div id="messageList"
+                class="flex-1 overflow-y-auto message-scrollbar px-8 py-6 space-y-8 max-w-4xl mx-auto w-full">
+            </div>
+            <!-- Input Area -->
+            <div class="px-8 pb-8 pt-2 max-w-4xl mx-auto w-full">
+                <form id="chatForm"
+                    class="relative bg-white dark:bg-slate-800 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-700 flex items-center p-2 focus-within:ring-2 ring-primary/20 transition-all">
+                    <div class="flex gap-1 px-2">
+                        <button type="button"
+                            class="p-2 text-[#4c799a] hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                            title="Attach image for visual search">
+                            <span class="material-symbols-outlined">attach_file</span>
+                        </button>
+                        <button type="button"
+                            class="p-2 text-[#4c799a] hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+                            title="Add location">
+                            <span class="material-symbols-outlined">location_on</span>
+                        </button>
+                    </div>
+                    <input id="chatInput"
+                        class="flex-1 bg-transparent border-none focus:ring-0 text-[15px] px-2 py-3 placeholder:text-[#4c799a]/60"
+                        placeholder="Tell me more about the hotels near Sarakiniko..." type="text" autocomplete="off" />
+                    <div class="flex items-center gap-2 pr-2">
+                        <button type="submit" id="sendBtn"
+                            class="flex items-center gap-2 bg-primary text-white pl-4 pr-3 py-2.5 rounded-xl font-bold text-sm shadow-md shadow-primary/30 hover:bg-primary/90 transition-all">
+                            Send <span class="material-symbols-outlined text-[20px]">send</span>
+                        </button>
+                    </div>
+                </form>
+                <div class="mt-4 flex justify-center">
+                    <p class="text-[10px] text-[#4c799a] font-medium uppercase tracking-[0.1em]">AI Travel Discover v2.4
+                        • Secure &amp; Encrypted</p>
+                </div>
+            </div>
+        </main>
+        <!-- Right Detail Panel (Optional/Contextual) -->
+        <aside
+            class="w-80 border-l border-slate-200 dark:border-slate-800 bg-white dark:bg-background-dark hidden lg:flex flex-col p-6">
+            <h3 class="text-sm font-bold text-[#0d161b] dark:text-white mb-6 uppercase tracking-wider">Trip Insights
+            </h3>
+            <div class="space-y-6">
+                <div class="space-y-3">
+                    <p class="text-xs font-bold text-[#4c799a]">TOP RECOMMENDATION</p>
+                    <div class="rounded-xl overflow-hidden shadow-sm border border-slate-100 dark:border-slate-700">
+                        <div class="h-24 bg-cover bg-center" data-alt="Blue dome church in Santorini"
+                            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCECDBhB2AS5ZGOIzkOP4XzSD5ZKaZV0MnzplSL4y6XKKNuaIv7-uR4VEnqdzrJeeHDbx8_xQ_xZhKhqLHpfxdqnrqZftNqjIa8iuRXPSWYYTL7gX__bpiiKRzAeLZsLqDG8QaxS7XcWlfcW4BRg9RAoi6a2ENeQ9mq61Zbsn8yZV7YLQ5tyxzsN3xlCtHvgg19tnIhoo-WP50iVuYsZsz7Z0V8HEGZwzMCBv0eNJ6_ymOLBHCnbKUvQm5-6b9dUYK0eBPG71y0fXo');">
+                        </div>
+                        <div class="p-3 bg-earth-light/30 dark:bg-slate-800">
+                            <p class="text-xs font-bold">Oia, Santorini</p>
+                            <div class="flex items-center justify-between mt-1">
+                                <span class="text-[10px] text-primary font-bold">Recommended Season: May-Oct</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <p class="text-xs font-bold text-[#4c799a]">QUICK STATS</p>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div
+                            class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                            <p class="text-[10px] text-[#4c799a] font-bold">AVG. FLIGHT</p>
+                            <p class="text-sm font-bold text-primary">$640</p>
+                        </div>
+                        <div
+                            class="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-700">
+                            <p class="text-[10px] text-[#4c799a] font-bold">WEATHER</p>
+                            <p class="text-sm font-bold text-primary">24°C</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <p class="text-xs font-bold text-[#4c799a] mb-3">DESTINATION MAP</p>
+                    <div class="w-full aspect-square rounded-xl bg-slate-100 dark:bg-slate-800 overflow-hidden relative group"
+                        data-location="Greece" style="">
+                        <div class="absolute inset-0 bg-cover bg-center transition-transform group-hover:scale-110"
+                            data-alt="Stylized map of Greek islands"
+                            style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuDAgk0eeP_iR4k81aTqMjYeE7C-6Os-QqETDqugTh-QwI_xWXvJpZJdB1vZeIWfreCRC9gbbYSThHxj2_cb6pmfAelJoG1jM0UXBi9C_om2ssxUrfYJuS3auX-lpUQ0n28db40Ja2-v5KBoc8Ok2o1JQcEQoppMDVBLWrGxUvo4umSU1kQov03hh8ijv_0h--1_ZCfZwXDvoLft0qGBYRZmxTc0ayNQKoSBy867MZslVkFqC7z3mECf6Ue9_fGxVxmgBB5jSteEvhs');">
+                        </div>
+                        <div class="absolute inset-0 bg-primary/10 pointer-events-none"></div>
+                        <button
+                            class="absolute bottom-3 left-1/2 -translate-x-1/2 bg-white/90 backdrop-blur px-3 py-1.5 rounded-full text-[10px] font-bold shadow-lg">Expand
+                            Map</button>
+                    </div>
+                </div>
+            </div>
+        </aside>
+    </div>
+    <script>
+            (function () {
+                var API_BASE = 'http://localhost:8080/api';
+                var messageList = document.getElementById('messageList');
+                var chatForm = document.getElementById('chatForm');
+                var chatInput = document.getElementById('chatInput');
+                var sendBtn = document.getElementById('sendBtn');
+                var saveConversationBtn = document.getElementById('saveConversationBtn');
+                var recentDiscoveriesList = document.getElementById('recentDiscoveriesList');
+                var newRecommendationBtn = document.getElementById('newRecommendationBtn');
+                var chatHeaderTitle = document.getElementById('chatHeaderTitle');
+                var conversationMessages = [];
+                var currentThreadId = null;
+
+                // --- Session ID Generation ---
+                function generateSessionId() {
+                    var email = localStorage.getItem('email') || 'anonymous';
+                    var userId = email.split('@')[0].replace(/[^a-zA-Z0-9]/g, ''); // alphanumeric only
+                    var timestamp = new Date().getTime();
+                    return userId + '_' + timestamp;
+                }
+
+                function startNewChat() {
+                    messageList.innerHTML = '';
+                    conversationMessages = [];
+                    currentThreadId = generateSessionId();
+                    if (chatHeaderTitle) chatHeaderTitle.textContent = "Travel AI Chat";
+
+                    // 초기 인사말
+                    appendAiMessage("안녕하세요! 어떤 여행지를 찾고 계신가요? 예산, 기간, 선호하는 테마를 말씀해 주세요.");
+                }
+
+                if (newRecommendationBtn) {
+                    newRecommendationBtn.addEventListener('click', startNewChat);
+                }
+
+                // --- Token Refresh Helper ---
+                async function fetchWithAuth(url, options) {
+                    if (!options) options = {};
+                    if (!options.headers) options.headers = {};
+
+                    var token = localStorage.getItem('accessToken');
+                    if (token) {
+                        // Ensure Authorization header is set/overwritten
+                        options.headers['Authorization'] = 'Bearer ' + token;
+                    }
+                    options.credentials = 'include';
+
+                    try {
+                        var res = await fetch(url, options);
+
+                        // If 401 Unauthorized, try to refresh
+                        if (res.status === 401) {
+                            console.log('🔒 Token expired (401). Attempting refresh...');
+                            try {
+                                // Refresh request (Cookie included, No Auth header needed)
+                                var refreshRes = await fetch('http://localhost:8080/api/auth/refresh', {
+                                    method: 'POST',
+                                    credentials: 'include'
+                                });
+
+                                if (refreshRes.ok) {
+                                    var data = await refreshRes.json();
+                                    var newToken = data.accessToken;
+                                    if (newToken) {
+                                        console.log('✅ Token refresh successful. Retrying original request...');
+                                        localStorage.setItem('accessToken', newToken);
+                                        // Retry original request with new token
+                                        options.headers['Authorization'] = 'Bearer ' + newToken;
+                                        return fetch(url, options);
+                                    }
+                                }
+                                throw new Error('Refresh failed');
+                            } catch (refreshErr) {
+                                console.error('❌ Refresh failed. Redirecting to login.', refreshErr);
+                                localStorage.removeItem('accessToken');
+                                localStorage.removeItem('email');
+                                window.parent.location.href = '/login';
+                                throw refreshErr;
+                            }
+                        }
+                        return res;
+                    } catch (err) {
+                        throw err;
+                    }
+                }
+                // -----------------------------
+
+                function formatDate(isoStr) {
+                    if (!isoStr) return '';
+                    var d = new Date(isoStr);
+                    var now = new Date();
+                    var diff = now - d;
+                    if (diff < 60000) return '방금 전';
+                    if (diff < 3600000) return Math.floor(diff / 60000) + '분 전';
+                    if (diff < 86400000) return Math.floor(diff / 3600000) + '시간 전';
+                    return d.getMonth() + 1 + '/' + d.getDate();
+                }
+
+                async function loadRecentDiscoveries() {
+                    if (!recentDiscoveriesList) return;
+                    try {
+                        var res = await fetchWithAuth(API_BASE + '/v1/conversations', { method: 'GET' });
+                        var data = await res.json().catch(function () { return {}; });
+                        var list = (data && data.data) ? data.data : [];
+                        recentDiscoveriesList.innerHTML = '';
+                        if (list.length === 0) {
+                            recentDiscoveriesList.innerHTML = '<p class="px-4 py-2 text-[11px] text-[#4c799a]">저장된 대화가 없습니다.</p>';
+                            return;
+                        }
+                        list.forEach(function (item, idx) {
+                            var div = document.createElement('div');
+                            div.className = 'flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors text-[#4c799a] cursor-pointer';
+                            if (idx === 0) div.className = 'flex items-center gap-3 px-4 py-2 rounded-lg bg-[#e7eef3] dark:bg-primary/10 text-primary cursor-pointer';
+                            div.setAttribute('data-id', item.id);
+                            var title = (item.title || '대화').substring(0, 30);
+                            if ((item.title || '').length > 30) title += '…';
+                            div.innerHTML = '<span class="material-symbols-outlined text-[20px]">schedule</span><p class="text-sm font-medium truncate" title="' + escapeHtml(item.title || '') + '">' + escapeHtml(title) + '</p>';
+                            div.addEventListener('click', function () { loadConversation(item.id); });
+                            recentDiscoveriesList.appendChild(div);
+                        });
+                    } catch (err) {
+                        // ignore or handle error
+                        console.error(err);
+                    }
+                }
+
+                function escapeHtml(s) {
+                    if (!s) return '';
+                    var div = document.createElement('div');
+                    div.textContent = s;
+                    return div.innerHTML;
+                }
+
+                function timeStr() {
+                    var d = new Date();
+                    return d.getHours() + ':' + String(d.getMinutes()).padStart(2, '0');
+                }
+
+                function appendUserMessage(text) {
+                    conversationMessages.push({ role: 'user', content: text });
+                    var wrap = document.createElement('div');
+                    wrap.className = 'flex justify-end items-start gap-4 space-y-8';
+                    wrap.innerHTML = '<div class="flex flex-col gap-1 items-end max-w-[70%]">' +
+                        '<div class="bg-primary text-white px-5 py-3 rounded-2xl rounded-tr-none shadow-md">' +
+                        '<p class="text-[15px] leading-relaxed">' + escapeHtml(text) + '</p></div>' +
+                        '<span class="text-[11px] text-[#4c799a] font-medium mr-1">' + timeStr() + '</span></div>';
+                    messageList.appendChild(wrap);
+                    messageList.scrollTop = messageList.scrollHeight;
+                }
+
+                function appendThinking() {
+                    var wrap = document.createElement('div');
+                    wrap.id = 'thinkingBlock';
+                    wrap.className = 'flex items-start gap-4';
+                    wrap.innerHTML = '<div class="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary">' +
+                        '<span class="material-symbols-outlined">smart_toy</span></div>' +
+                        '<div class="flex gap-1 py-4 px-5 bg-white dark:bg-slate-800 rounded-2xl shadow-sm border border-slate-100 dark:border-slate-700">' +
+                        '<span class="h-1.5 w-1.5 rounded-full bg-slate-400 animate-pulse"></span>' +
+                        '<span class="h-1.5 w-1.5 rounded-full bg-slate-400 animate-pulse" style="animation-delay: 0.2s"></span>' +
+                        '<span class="h-1.5 w-1.5 rounded-full bg-slate-400 animate-pulse" style="animation-delay: 0.4s"></span></div>';
+                    messageList.appendChild(wrap);
+                    messageList.scrollTop = messageList.scrollHeight;
+                }
+
+                function removeThinking() {
+                    var el = document.getElementById('thinkingBlock');
+                    if (el) el.remove();
+                }
+
+                function appendAiMessage(text) {
+                    conversationMessages.push({ role: 'assistant', content: text });
+                    var wrap = document.createElement('div');
+                    wrap.className = 'flex items-start gap-4';
+                    wrap.innerHTML = '<div class="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary">' +
+                        '<span class="material-symbols-outlined">smart_toy</span></div>' +
+                        '<div class="flex flex-col gap-4 items-start max-w-[85%]">' +
+                        '<div class="bg-white dark:bg-slate-800 text-[#0d161b] dark:text-slate-100 px-5 py-4 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 dark:border-slate-700">' +
+                        '<p class="text-[15px] leading-relaxed">' + escapeHtml(text) + '</p></div></div>';
+                    messageList.appendChild(wrap);
+                    messageList.scrollTop = messageList.scrollHeight;
+                }
+
+                function renderUserBubble(text) {
+                    var wrap = document.createElement('div');
+                    wrap.className = 'flex justify-end items-start gap-4 space-y-8';
+                    wrap.innerHTML = '<div class="flex flex-col gap-1 items-end max-w-[70%]">' +
+                        '<div class="bg-primary text-white px-5 py-3 rounded-2xl rounded-tr-none shadow-md">' +
+                        '<p class="text-[15px] leading-relaxed">' + escapeHtml(text) + '</p></div>' +
+                        '<span class="text-[11px] text-[#4c799a] font-medium mr-1">' + timeStr() + '</span></div>';
+                    messageList.appendChild(wrap);
+                }
+                function renderAssistantBubble(text) {
+                    var wrap = document.createElement('div');
+                    wrap.className = 'flex items-start gap-4';
+                    wrap.innerHTML = '<div class="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 text-primary">' +
+                        '<span class="material-symbols-outlined">smart_toy</span></div>' +
+                        '<div class="flex flex-col gap-4 items-start max-w-[85%]">' +
+                        '<div class="bg-white dark:bg-slate-800 text-[#0d161b] dark:text-slate-100 px-5 py-4 rounded-2xl rounded-tl-none shadow-sm border border-slate-100 dark:border-slate-700">' +
+                        '<p class="text-[15px] leading-relaxed">' + escapeHtml(text) + '</p></div></div>';
+                    messageList.appendChild(wrap);
+                }
+
+                async function loadConversation(id) {
+                    try {
+                        var res = await fetchWithAuth(API_BASE + '/v1/conversations/' + id, { method: 'GET' });
+                        var data = await res.json().catch(function () { return {}; });
+                        if (!res.ok || !data.success) {
+                            alert(data.message || '대화를 불러올 수 없습니다.');
+                            return;
+                        }
+                        var conv = data.data;
+                        if (!conv || !conv.messages || !conv.messages.length) {
+                            alert('대화 내용이 없습니다.');
+                            return;
+                        }
+                        messageList.innerHTML = '';
+                        conversationMessages = conv.messages.slice();
+                        conv.messages.forEach(function (msg) {
+                            if (msg.role === 'user') renderUserBubble(msg.content || '');
+                            else renderAssistantBubble(msg.content || '');
+                        });
+                        messageList.scrollTop = messageList.scrollHeight;
+                        var titleEl = document.getElementById('chatHeaderTitle');
+                        if (titleEl && conv.title) titleEl.textContent = (conv.title.length > 40 ? conv.title.substring(0, 40) + '…' : conv.title);
+                    } catch (err) {
+                        alert('대화를 불러오는 중 오류가 발생했습니다.');
+                    }
+                }
+
+                chatForm.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    var text = (chatInput.value || '').trim();
+                    if (!text) return;
+                    chatInput.value = '';
+                    sendBtn.disabled = true;
+
+                    appendUserMessage(text);
+                    appendThinking();
+
+                    if (!currentThreadId) {
+                        currentThreadId = generateSessionId();
+                    }
+
+                    try {
+                        var res = await fetchWithAuth(API_BASE + '/v1/chat/travel', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                message: text,
+                                thread_id: currentThreadId
+                            })
+                        });
+                        var data = await res.json().catch(function () { return {}; });
+                        removeThinking();
+
+                        var reply = "";
+                        if (data && data.data && data.data.answer) {
+                            reply = data.data.answer;
+                            // 백엔드에서 반환한 threadId가 있으면 업데이트 (보통 동일함)
+                            if (data.data.thread_id) {
+                                currentThreadId = data.data.thread_id;
+                            }
+                        } else {
+                            reply = (data.message || (res.ok ? '응답을 이해하지 못했습니다.' : '서버 오류가 발생했습니다.'));
+                        }
+
+                        appendAiMessage(reply);
+                    } catch (err) {
+                        removeThinking();
+                        // 401 refresh failed 에러일 경우 이미 redirect 되므로 메시지 표시 안 해도 됨, 
+                        // 하지만 사용자 경험을 위해 표시
+                        if (err.message !== 'Refresh failed') {
+                            appendAiMessage('오류: ' + (err.message || '네트워크 오류'));
+                        }
+                    }
+                    sendBtn.disabled = false;
+                });
+
+                if (saveConversationBtn) {
+                    saveConversationBtn.addEventListener('click', async function () {
+                        if (conversationMessages.length === 0) {
+                            alert('저장할 대화가 없습니다. 먼저 메시지를 보내주세요.');
+                            return;
+                        }
+                        var title = conversationMessages[0].role === 'user' ? (conversationMessages[0].content || '저장된 대화').substring(0, 100) : '저장된 대화';
+                        try {
+                            var res = await fetchWithAuth(API_BASE + '/v1/conversations', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ title: title, messages: conversationMessages })
+                            });
+                            var data = await res.json().catch(function () { return {}; });
+                            if (res.status === 401) return; // fetchWithAuth에서 핸들링함
+
+                            if (data.success) {
+                                alert('대화가 저장되었습니다.');
+                                loadRecentDiscoveries();
+                            } else {
+                                alert(data.message || '저장에 실패했습니다.');
+                            }
+                        } catch (err) {
+                            alert('저장 중 오류가 발생했습니다: ' + (err.message || '네트워크 오류'));
+                        }
+                    });
+                }
+                // --- Initialize ---
+                loadRecentDiscoveries();
+
+                // 페이지 로드 시 새로운 채팅 세션 시작
+                if (messageList.children.length === 0) {
+                    startNewChat();
+                }
+            })();
+
+        function openTravelStylePopup() {
+            document.getElementById('travelStylePopup').style.display = 'flex';
+        }
+        function closeTravelStylePopup() {
+            document.getElementById('travelStylePopup').style.display = 'none';
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+    /* Travel AI 디자인: 밝은 그레이 배경 + 포인트 컬러 #1392EC */
+    --primary: #1392EC;
+    --primary-hover: #0f78c8;
+    --primary-light: #E3F2FD;
+    --primary-light-hover: #BBDEFB;
+    --glass-border: #EEEEEE;
+    --text-primary: #333333;
+    --text-muted: #666666;
+    --text-muted-soft: #999999;
+    --bg-app: #F5F6F8;
+    --bg-card: #FFFFFF;
+    --border-light: #E2E8F0;
+    --status-active: #16a34a;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.8s ease-out forwards;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.animate-slide-up {
+    animation: slideUp 0.5s ease-out forwards;
+}
